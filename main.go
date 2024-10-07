@@ -96,7 +96,8 @@ func main() {
 	c.wg.Add(1)
 
 	for i := 1; i <= 4; i++ {
-		rs := fmt.Sprintf("2600:3c0f:%d:34::%d", *dcid, i)
+		fmt.Println("HELLLOOOOOOOO")
+		rs := fmt.Sprintf("2600:3c1f:%d:34::%d", *dcid, i)
 		if err := c.AddRs(rs); err != nil {
 			log.WithFields(log.Fields{"Topic": "Neighbor", "Neighbor": rs}).Fatal("failed adding neighbor")
 		}
