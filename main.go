@@ -30,6 +30,7 @@ func main() {
 		"Consider all interfaces when detecting elastic IP candidates (not just loopback)",
 	)
 	neighborPattern := flag.String("neighborpattern", defaultNeighborPattern, "The pattern to use for generating neighbor addresses. Only use this when running lelastic outside of production Linode datacenters.")
+	dcRange := flag.String("dcrange", "", "The datacenter IPv6 range in which BGP peers are located. Only use this when running lelastic outside of production Linode datacenters. When a value is defined, it takes precedence over the neighborpattern and dcid parameters. Example: `-dcrange=2600:3c0f:1:34::`")
 
 	flag.Parse()
 
@@ -43,9 +44,9 @@ func main() {
 		})
 	}
 
-	if *dcid <= 1 {
+	if *dcid <= 1 && *dcRange == "" {
 		flag.Usage()
-		log.WithFields(log.Fields{"Topic": "Main"}).Fatal("dcid not provided, I need this info")
+		log.WithFields(log.Fields{"Topic": "Main"}).Fatal("dcid or dcrange must be specified")
 	}
 
 	if !*primary && !*secondary {
@@ -98,7 +99,12 @@ func main() {
 	c.wg.Add(1)
 
 	for i := 1; i <= 4; i++ {
-		rs := fmt.Sprintf(*neighborPattern, *dcid, i)
+		var rs string
+		if *dcRange != "" {
+			rs = fmt.Sprintf(*dcRange+"%d", i)
+		} else {
+			rs = fmt.Sprintf(*neighborPattern, *dcid, i)
+		}
 		if err := c.AddRs(rs); err != nil {
 			log.WithFields(log.Fields{"Topic": "Neighbor", "Neighbor": rs}).Fatal("failed adding neighbor")
 		}
